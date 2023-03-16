@@ -1,6 +1,7 @@
 package shortenexpression
 
 import (
+	"fmt"
 	"go/ast"
 
 	"golang.org/x/tools/go/analysis"
@@ -22,17 +23,23 @@ var Analyzer = &analysis.Analyzer{
 
 func run(pass *analysis.Pass) (any, error) {
 	inspect := pass.ResultOf[inspect.Analyzer].(*inspector.Inspector)
-
-	nodeFilter := []ast.Node{
-		(*ast.Ident)(nil),
-	}
-
-	inspect.Preorder(nodeFilter, func(n ast.Node) {
+	stmtCount := 0
+	inspect.Preorder(nil, func(n ast.Node) {
 		switch n := n.(type) {
-		case *ast.Ident:
-			if n.Name == "gopher" {
-				pass.Reportf(n.Pos(), "identifier is gopher")
-			}
+		case *ast.AssignStmt:
+			ast.Inspect(n, func(n ast.Node) bool {
+				switch n := n.(type) {
+				case *ast.BinaryExpr:	
+					stmtCount++
+					fmt.Println(stmtCount)
+					if stmtCount > 5 {
+						pass.Reportf(n.Pos(), "expression is too long")
+						return false
+					}
+					
+				}
+				return true
+			})
 		}
 	})
 
