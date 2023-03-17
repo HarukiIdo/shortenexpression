@@ -22,22 +22,29 @@ var Analyzer = &analysis.Analyzer{
 
 func run(pass *analysis.Pass) (any, error) {
 	inspect := pass.ResultOf[inspect.Analyzer].(*inspector.Inspector)
+	fset := pass.Fset
+	
 	inspect.Preorder(nil, func(n ast.Node) {
 		switch n := n.(type) {
 		case *ast.AssignStmt:
-			var count int
-			for _, r := range n.Rhs {
-				count += countNode(r)
-			}
-			if count > 5 {
-				pass.Reportf(n.Pos(), "expression is too long (%d)", count)
+
+			// 改行がないケースのみ数を数える
+			start := fset.Position(n.Pos()).Line
+			end := fset.Position(n.End()).Line
+			if((end - start) == 0) {	
+				var count int
+				for _, r := range n.Rhs {
+					count += countNode(r)
+				}
+				if count > 5 {
+					pass.Reportf(n.Pos(), "expression is too long (%d)", count)
+				}
 			}
 		}
 	})
 
 	return nil, nil
 }
-
 
 func countNode(n ast.Node) int {
 	var count int

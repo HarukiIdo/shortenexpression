@@ -25,7 +25,6 @@ const url = "https://index.golang.org/index"
 func main() {
 
 	var wg sync.WaitGroup
-
 	resp, err := http.Get(url)
 	if err != nil {
 		log.Fatal(err)
@@ -41,7 +40,7 @@ func main() {
 	pkgLists := make([]string, 0)
 	for scanner.Scan() {
 		var m message
-		if err := json.Unmarshal(scanner.Bytes(), m); err != nil {
+		if err := json.Unmarshal(scanner.Bytes(), &m); err != nil {
 			log.Fatal("Json Unmarshal error:", err)
 		}
 		pkgLists = append(pkgLists, m.Path)
